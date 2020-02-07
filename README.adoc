@@ -1,0 +1,76 @@
+= A library to interact with etc/hosts file
+
+**Work in Progress**
+
+This go library provides methods to interact with `etc/hosts` file.
+One can parse the `etc/hosts` file to a go struct.
+One can parse a go struct to a valid well-formed `etc/hosts` file.
+
+== Some examples
+
+_For more examples check the tests._
+
+=== Parse from io.Reader
+
+[source,go]
+----
+package main
+
+import (
+    "fmt"
+    "github.com/bitofcode/hosts/parser"
+    "os"
+)
+import "bytes"
+
+func main() {
+
+	reader := bytes.NewBufferString(
+		`127.0.0.1  localhost localhost.local
+# a comment
+192.168.10.10 example.com
+192.168.10.10 example.io # another comment
+192.168.15.15 hello.world# a dummy host`)
+
+	entrySet, err := parser.ParseFromReader(reader)
+
+    if err != nil {
+    	fmt.Fprintf(os.Stderr, "unexpected error %v\n", err)
+    }
+
+    fmt.Println(entrySet)
+
+}
+----
+
+=== Parse to a io.Writer
+
+[source,go]
+----
+package main
+
+import (
+    "bytes"
+    "fmt"
+    "github.com/bitofcode/hosts"
+    "github.com/bitofcode/hosts/parser"
+    "os"
+)
+
+
+func main() {
+    entrySet := hosts.NewEntrySet()
+    entrySet.AddEntry(hosts.NewEntry("127.0.0.1", []string{"localhost", "localhost.local"}))
+    entrySet.AddEntry(hosts.NewEntry("10.0.0.10", []string{"example.com", "example.io"}))
+    entrySet.AddEntry(hosts.NewEntry("127.0.0.1", []string{"docker.host.local"}))
+
+    buffer := bytes.NewBuffer(make([]byte, 0))
+
+    err := parser.WriteToWriter(entrySet, buffer)
+
+    if err != nil {
+        fmt.Fprintf(os.Stderr,"unexpected error '%v'\n", err)
+    }
+}
+----
+
