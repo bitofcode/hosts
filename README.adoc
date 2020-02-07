@@ -66,7 +66,7 @@ func main() {
 
     buffer := bytes.NewBuffer(make([]byte, 0))
 
-    err := parser.Writer(entrySet, buffer)
+    err := parser.Write(entrySet, buffer)
 
     if err != nil {
         fmt.Fprintf(os.Stderr,"unexpected error '%v'\n", err)
