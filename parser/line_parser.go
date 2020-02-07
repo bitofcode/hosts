@@ -43,8 +43,8 @@ var (
 
 const commentSign = "#"
 
-// ParseFromLine convert a given string to  hostsfile.Entry.
-func ParseFromLine(line string) (ent hosts.Entry, err error) {
+// ReadFromLine convert a given string to  hostsfile.Entry.
+func ReadFromLine(line string) (ent hosts.Entry, err error) {
 	if isEmptyOrComment(line) {
 		return nil, emptyLineError
 	}
@@ -85,8 +85,8 @@ func isEmptyOrComment(line string) bool {
 	return len(line) <= 0 || strings.HasPrefix(line, commentSign)
 }
 
-// ParseToLine convert a given hostsfile.Entry and convert it to etc/hosts line without line-separator.
-func ParseToLine(ent hosts.Entry) (line string, err error) {
+// WriteToLine convert a given hostsfile.Entry and convert it to etc/hosts line without line-separator.
+func WriteToLine(ent hosts.Entry) (line string, err error) {
 	if strings.Contains(ent.Ip(), commentSign) {
 		return "", invalidIp
 	}
