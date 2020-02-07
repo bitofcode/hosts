@@ -20,7 +20,7 @@ func TestParseFromLineEmptyLine(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.line, func(t *testing.T) {
-			_, err := ParseFromLine(test.line)
+			_, err := ReadFromLine(test.line)
 			if err == nil || err != emptyLineError {
 				t.Errorf("For line '%s' an error is expected: '%v', actual: %v", test.line, emptyLineError, err)
 			}
@@ -41,7 +41,7 @@ func TestParseFromLineInvalidLine(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.line, func(t *testing.T) {
-			_, err := ParseFromLine(test.line)
+			_, err := ReadFromLine(test.line)
 			if err == nil || err != InvalidLineError {
 				t.Errorf("For line '%s' an error is expected: '%v', actual: %v", test.line, emptyLineError, err)
 			}
@@ -111,7 +111,7 @@ func TestParseFromLineValidLine(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.line, func(t *testing.T) {
-			ent, err := ParseFromLine(test.line)
+			ent, err := ReadFromLine(test.line)
 			if err != nil {
 				t.Errorf("For line '%s' an unexpected error occurred: '%v'", test.line, err)
 			}
@@ -216,20 +216,20 @@ func TestParseToLine(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("'%v'=>'%s' (error='%v')", tt.args, tt.wantLine, tt.err), func(t *testing.T) {
 
-			gotLine, err := ParseToLine(hosts.NewEntry(tt.args.ip, tt.args.hostNames))
+			gotLine, err := WriteToLine(hosts.NewEntry(tt.args.ip, tt.args.hostNames))
 
 			if tt.wantErr && (tt.err != err) {
-				t.Errorf("ParseToLine(%v) expected error = '%v', actual = '%v'", tt.args, tt.err, err)
+				t.Errorf("WriteToLine(%v) expected error = '%v', actual = '%v'", tt.args, tt.err, err)
 				return
 			}
 
 			if !tt.wantErr && (err != nil) {
-				t.Errorf("ParseToLine(%v) unexpected error = %v", tt.args, err)
+				t.Errorf("WriteToLine(%v) unexpected error = %v", tt.args, err)
 				return
 			}
 
 			if gotLine != tt.wantLine {
-				t.Errorf("ParseToLine(%v) want %v, gotLine = %v", tt.args, tt.wantLine, gotLine)
+				t.Errorf("WriteToLine(%v) want %v, gotLine = %v", tt.args, tt.wantLine, gotLine)
 			}
 		})
 	}
@@ -265,20 +265,20 @@ func TestParseToLineValidEntry(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("'%v'=>'%s' (error='%v')", tt.args, tt.wantLine, tt.err), func(t *testing.T) {
 
-			gotLine, err := ParseToLine(hosts.NewEntry(tt.args.ip, tt.args.hostNames))
+			gotLine, err := WriteToLine(hosts.NewEntry(tt.args.ip, tt.args.hostNames))
 
 			if tt.wantErr && (tt.err != err) {
-				t.Errorf("ParseToLine(%v) expected error = '%v', actual = '%v'", tt.args, tt.err, err)
+				t.Errorf("WriteToLine(%v) expected error = '%v', actual = '%v'", tt.args, tt.err, err)
 				return
 			}
 
 			if !tt.wantErr && (err != nil) {
-				t.Errorf("ParseToLine(%v) unexpected error = %v", tt.args, err)
+				t.Errorf("WriteToLine(%v) unexpected error = %v", tt.args, err)
 				return
 			}
 
 			if gotLine != tt.wantLine {
-				t.Errorf("ParseToLine(%v) want '%v', gotLine = '%v'", tt.args, tt.wantLine, gotLine)
+				t.Errorf("WriteToLine(%v) want '%v', gotLine = '%v'", tt.args, tt.wantLine, gotLine)
 			}
 		})
 	}

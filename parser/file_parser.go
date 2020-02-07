@@ -30,15 +30,15 @@ import (
 	"sort"
 )
 
-// ParseFromReader reads the hosts file from the provided io.Reader and returns an EntrySet.
-func ParseFromReader(reader io.Reader) (entrySet hosts.EntrySet, err error) {
+// Read reads the hosts file from the provided io.Reader and returns an EntrySet.
+func Read(reader io.Reader) (entrySet hosts.EntrySet, err error) {
 	entrySet = hosts.NewEntrySet()
 	scanner := bufio.NewScanner(reader)
 	lineNumber := 0
 	for scanner.Scan() {
 		lineNumber++
 		line := scanner.Text()
-		entry, err := ParseFromLine(line)
+		entry, err := ReadFromLine(line)
 		if err != nil && err == InvalidLineError {
 			return nil, err
 		}
@@ -47,13 +47,13 @@ func ParseFromReader(reader io.Reader) (entrySet hosts.EntrySet, err error) {
 	return entrySet, nil
 }
 
-// WriteToWriter writes the EntrySet to a well formatted hosts file into io.Writer.
-func WriteToWriter(entrySet hosts.EntrySet, writer io.Writer) error {
-	return WriteToWriterWith(entrySet, writer, ParseToLine)
+// Write writes the EntrySet to a well formatted hosts file into io.Write.
+func Write(entrySet hosts.EntrySet, writer io.Writer) error {
+	return WriteWith(entrySet, writer, WriteToLine)
 }
 
-// WriteToWriterWith writes all entries formatted with the provided formatter from the provided EntrySet into io.Writer.
-func WriteToWriterWith(entrySet hosts.EntrySet, writer io.Writer, formatter func(ent hosts.Entry) (line string, err error)) error {
+// WriteWith writes all entries formatted with the provided formatter from the provided EntrySet into io.Write.
+func WriteWith(entrySet hosts.EntrySet, writer io.Writer, formatter func(ent hosts.Entry) (line string, err error)) error {
 	entries, err := entrySet.AllEntries()
 	if err != nil {
 		return err

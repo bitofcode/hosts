@@ -18,7 +18,7 @@ func TestRead(t *testing.T) {
 192.168.10.10 example.io # another comment
 192.168.15.15 hello.world# a dummy host`)
 
-	entrySet, err := ParseFromReader(reader)
+	entrySet, err := Read(reader)
 
 	assertNoError(err, t)
 
@@ -65,7 +65,7 @@ func TestWriteFileWith(t *testing.T) {
 
 	buffer := bytes.NewBuffer(make([]byte, 0))
 
-	err := WriteToWriterWith(entrySet, buffer, ParseToLine)
+	err := WriteWith(entrySet, buffer, WriteToLine)
 
 	if err != nil {
 		t.Errorf("unexpected error '%v'", err)
@@ -75,7 +75,7 @@ func TestWriteFileWith(t *testing.T) {
 
 	entries, _ := entrySet.AllEntries()
 	for _, entry := range entries {
-		line, err := ParseToLine(entry)
+		line, err := WriteToLine(entry)
 		if !strings.Contains(content, line) || err != nil {
 			t.Errorf("unexpected erro (%v) and expected '%s' to conatain '%s'", err, content, line)
 		}
@@ -89,7 +89,7 @@ func TestWriteFile(t *testing.T) {
 	entries, _ := entrySet.AllEntries()
 	buffer := bytes.NewBuffer(make([]byte, 0))
 
-	err := WriteToWriter(entrySet, buffer)
+	err := Write(entrySet, buffer)
 
 	if err != nil {
 		t.Errorf("unexpected error '%v'", err)
@@ -107,7 +107,7 @@ func getExpectedContent(entries []hosts.Entry, t *testing.T) string {
 	expectedBuffer := bytes.NewBuffer(make([]byte, 0))
 	lines := make([]string, 0)
 	for _, entry := range entries {
-		line, err := ParseToLine(entry)
+		line, err := WriteToLine(entry)
 		if err != nil {
 			t.Fatalf("unexpected error %v", err)
 		}
