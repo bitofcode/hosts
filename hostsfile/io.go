@@ -18,9 +18,9 @@ func Read(path string) (entries hosts.EntrySet, err error) {
 	return parser.Read(file)
 }
 
-// Write writes the given hosts.EntrySet to the given path.
+// Write writes the given hosts.EntrySet to the given path (create a new file if none exists).
 func Write(entries hosts.EntrySet, path string) error {
-	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE, 0666)
+	file, err := os.OpenFile(path, os.O_CREATE, 0666)
 	if err != nil {
 		return err
 	}

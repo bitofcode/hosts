@@ -23,5 +23,23 @@
 /*
 Package parser provides an interface to parse line/file-entry from/to hosts-file.
 
+  var reader io.Reader
+
+  // ...
+
+  entrySet, err := Read(reader)
+
+  // ...
+
+  entrySet.AddEntry(hosts.NewEntry("192.168.15.15", []string{"hello.world.com"}))
+
+  // ...
+
+  var writer io.Writer
+
+  // ...
+
+  err := Write(entrySet, writer)
+
 */
 package parser

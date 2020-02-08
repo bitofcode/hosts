@@ -43,7 +43,7 @@ var (
 
 const commentSign = "#"
 
-// ReadFromLine convert a given string to  hostsfile.Entry.
+// ReadFromLine convert a given string to hostsfile.Entry.
 func ReadFromLine(line string) (ent hosts.Entry, err error) {
 	if isEmptyOrComment(line) {
 		return nil, emptyLineError
@@ -85,7 +85,7 @@ func isEmptyOrComment(line string) bool {
 	return len(line) <= 0 || strings.HasPrefix(line, commentSign)
 }
 
-// WriteToLine convert a given hostsfile.Entry and convert it to etc/hosts line without line-separator.
+// WriteToLine converts a given hostsfile.Entry to etc/hosts line without line-separator.
 func WriteToLine(ent hosts.Entry) (line string, err error) {
 	if strings.Contains(ent.Ip(), commentSign) {
 		return "", invalidIp
