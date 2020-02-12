@@ -22,11 +22,13 @@
 
 package hosts
 
+import "net"
+
 type EntrySet interface {
 	AddEntry(entry Entry, entries ...Entry)
 	Contains(entry Entry) bool
-	EntriesOfIP(ip string) (hosts []string, ok bool)
-	AllEntries() (entries []Entry, err error)
+	EntriesOfIP(ip net.IP) (hosts []string, ok bool)
+	AllEntries() []Entry
 }
 
 type entrySet struct {
@@ -41,9 +43,7 @@ func (e *entrySet) AddEntry(entry Entry, entries ...Entry) {
 }
 
 func (e *entrySet) addEntry(entry Entry) {
-	if entry == nil {
-		return
-	}
+
 	en := e.getOrCreateEntry(entry.Ip())
 	for _, h := range entry.HostNames() {
 		en.AddHostName(h)
@@ -51,7 +51,7 @@ func (e *entrySet) addEntry(entry Entry) {
 }
 
 func (e *entrySet) Contains(entry Entry) bool {
-	internalEntry, ok := e.entries[entry.Ip()]
+	internalEntry, ok := e.entries[entry.IpString()]
 	if !ok {
 		return ok
 	}
@@ -64,8 +64,8 @@ func (e *entrySet) Contains(entry Entry) bool {
 	return true
 }
 
-func (e *entrySet) EntriesOfIP(ip string) (hosts []string, ok bool) {
-	ent, ok := e.entries[ip]
+func (e *entrySet) EntriesOfIP(ip net.IP) (hosts []string, ok bool) {
+	ent, ok := e.entries[ip.String()]
 	if !ok {
 		return nil, ok
 	}
@@ -74,23 +74,20 @@ func (e *entrySet) EntriesOfIP(ip string) (hosts []string, ok bool) {
 	return hosts, true
 }
 
-func (e *entrySet) AllEntries() (entries []Entry, err error) {
-	entries = make([]Entry, 0)
+func (e *entrySet) AllEntries() []Entry {
+	entries := make([]Entry, 0)
 	for _, ent := range e.entries {
-		entry, err := CloneEntry(ent)
-		if err != nil {
-			return nil, err
-		}
+		entry, _ := CloneEntry(ent)
 		entries = append(entries, entry)
 	}
-	return entries, nil
+	return entries
 }
 
-func (e *entrySet) getOrCreateEntry(ip string) Entry {
-	en, ok := e.entries[ip]
+func (e *entrySet) getOrCreateEntry(ip net.IP) Entry {
+	en, ok := e.entries[ip.String()]
 	if !ok {
-		en = NewEntryIp(ip)
-		e.entries[ip] = en
+		en, _ = NewEntryIp(ip)
+		e.entries[en.IpString()] = en
 	}
 	return en
 }

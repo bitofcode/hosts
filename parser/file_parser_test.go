@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"github.com/bitofcode/hosts"
 	"io"
+	"net"
 	"sort"
 	"strings"
 	"testing"
@@ -44,12 +45,12 @@ func TestRead(t *testing.T) {
 
 	assertNoError(err, t)
 
-	assertCorrectEntrySet(entrySet, t, err)
+	assertCorrectEntrySet(entrySet, t)
 
 	expectedEntries := []hosts.Entry{
-		hosts.NewEntry("127.0.0.1", []string{"localhost", "localhost.local"}),
-		hosts.NewEntry("192.168.10.10", []string{"example.com", "example.io"}),
-		hosts.NewEntry("192.168.15.15", []string{"hello.world"}),
+		hosts.NewEntryUnsafe(net.ParseIP("127.0.0.1"), []string{"localhost", "localhost.local"}),
+		hosts.NewEntryUnsafe(net.ParseIP("192.168.10.10"), []string{"example.com", "example.io"}),
+		hosts.NewEntryUnsafe(net.ParseIP("192.168.15.15"), []string{"hello.world"}),
 	}
 
 	assertEntries(expectedEntries, entrySet, t)
@@ -63,12 +64,12 @@ func assertEntries(expectedEntries []hosts.Entry, entrySet hosts.EntrySet, t *te
 	}
 }
 
-func assertCorrectEntrySet(entrySet hosts.EntrySet, t *testing.T, err error) {
+func assertCorrectEntrySet(entrySet hosts.EntrySet, t *testing.T) {
 	if entrySet == nil {
 		t.Fatalf("unexpected to get EntrySet=nil")
 	}
 
-	entries, err := entrySet.AllEntries()
+	entries := entrySet.AllEntries()
 	if len(entries) != 3 {
 		t.Fatalf("unexpected number of entries %d", len(entries))
 	}
@@ -82,8 +83,8 @@ func assertNoError(err error, t *testing.T) {
 
 func TestWriteFileWith(t *testing.T) {
 	entrySet := hosts.NewEntrySet()
-	entrySet.AddEntry(hosts.NewEntry("127.0.0.1", []string{"localhost", "localhost.local"}))
-	entrySet.AddEntry(hosts.NewEntry("10.0.0.10", []string{"example.com", "example.io"}))
+	entrySet.AddEntry(hosts.NewEntryUnsafe(net.ParseIP("127.0.0.1"), []string{"localhost", "localhost.local"}))
+	entrySet.AddEntry(hosts.NewEntryUnsafe(net.ParseIP("10.0.0.10"), []string{"example.com", "example.io"}))
 
 	buffer := bytes.NewBuffer(make([]byte, 0))
 
@@ -95,7 +96,7 @@ func TestWriteFileWith(t *testing.T) {
 
 	content := buffer.String()
 
-	entries, _ := entrySet.AllEntries()
+	entries := entrySet.AllEntries()
 	for _, entry := range entries {
 		line, err := WriteToLine(entry)
 		if !strings.Contains(content, line) || err != nil {
@@ -106,9 +107,9 @@ func TestWriteFileWith(t *testing.T) {
 
 func TestWriteFile(t *testing.T) {
 	entrySet := hosts.NewEntrySet()
-	entrySet.AddEntry(hosts.NewEntry("127.0.0.1", []string{"localhost", "localhost.local"}))
-	entrySet.AddEntry(hosts.NewEntry("10.0.0.10", []string{"example.com", "example.io"}))
-	entries, _ := entrySet.AllEntries()
+	entrySet.AddEntry(hosts.NewEntryUnsafe(net.ParseIP("127.0.0.1"), []string{"localhost", "localhost.local"}))
+	entrySet.AddEntry(hosts.NewEntryUnsafe(net.ParseIP("10.0.0.10"), []string{"example.com", "example.io"}))
+	entries := entrySet.AllEntries()
 	buffer := bytes.NewBuffer(make([]byte, 0))
 
 	err := Write(entrySet, buffer)

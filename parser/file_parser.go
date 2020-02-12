@@ -42,7 +42,9 @@ func Read(reader io.Reader) (entrySet hosts.EntrySet, err error) {
 		if err != nil && err == InvalidLineError {
 			return nil, err
 		}
-		entrySet.AddEntry(entry)
+		if err == nil {
+			entrySet.AddEntry(entry)
+		}
 	}
 	return entrySet, nil
 }
@@ -54,10 +56,7 @@ func Write(entrySet hosts.EntrySet, writer io.Writer) error {
 
 // WriteWith writes all entries formatted with the provided formatter from the provided EntrySet into io.Write.
 func WriteWith(entrySet hosts.EntrySet, writer io.Writer, formatter func(ent hosts.Entry) (line string, err error)) error {
-	entries, err := entrySet.AllEntries()
-	if err != nil {
-		return err
-	}
+	entries := entrySet.AllEntries()
 
 	lines := make([]string, 0)
 	for _, entry := range entries {
@@ -70,7 +69,7 @@ func WriteWith(entrySet hosts.EntrySet, writer io.Writer, formatter func(ent hos
 
 	sort.Strings(lines)
 	for _, l := range lines {
-		_, err = io.WriteString(writer, fmt.Sprintln(l))
+		_, err := io.WriteString(writer, fmt.Sprintln(l))
 		if err != nil {
 			return err
 		}

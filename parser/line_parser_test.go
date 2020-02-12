@@ -25,6 +25,7 @@ package parser
 import (
 	"fmt"
 	"github.com/bitofcode/hosts"
+	"net"
 	"sort"
 	"testing"
 )
@@ -138,7 +139,7 @@ func TestParseFromLineValidLine(t *testing.T) {
 				t.Errorf("For line '%s' an unexpected error occurred: '%v'", test.line, err)
 			}
 			ip := ent.Ip()
-			if ip != test.ip {
+			if ip.String() != test.ip {
 				t.Errorf("For line '%s', expected ip='%s', actual='%s'", test.line, test.ip, ip)
 			}
 
@@ -189,56 +190,11 @@ func TestParseToLine(t *testing.T) {
 			wantErr:  true,
 			err:      invalidHostNameList,
 		},
-		{
-			args: args{
-				ip:        "127.0.0.1",
-				hostNames: []string{"#"},
-			},
-			wantLine: "",
-			wantErr:  true,
-			err:      invalidHostName,
-		},
-		{
-			args: args{
-				ip:        "127.0.0.1",
-				hostNames: []string{"# hallo"},
-			},
-			wantLine: "",
-			wantErr:  true,
-			err:      invalidHostName,
-		},
-		{
-			args: args{
-				ip:        "127.0.0.1#",
-				hostNames: []string{"# hallo"},
-			},
-			wantLine: "",
-			wantErr:  true,
-			err:      invalidIp,
-		},
-		{
-			args: args{
-				ip:        "#127.0.0.1#",
-				hostNames: []string{"# hallo"},
-			},
-			wantLine: "",
-			wantErr:  true,
-			err:      invalidIp,
-		},
-		{
-			args: args{
-				ip:        "#127.0.0.1",
-				hostNames: []string{"# hallo"},
-			},
-			wantLine: "",
-			wantErr:  true,
-			err:      invalidIp,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("'%v'=>'%s' (error='%v')", tt.args, tt.wantLine, tt.err), func(t *testing.T) {
 
-			gotLine, err := WriteToLine(hosts.NewEntry(tt.args.ip, tt.args.hostNames))
+			gotLine, err := WriteToLine(hosts.NewEntryUnsafe(net.ParseIP(tt.args.ip), tt.args.hostNames))
 
 			if tt.wantErr && (tt.err != err) {
 				t.Errorf("WriteToLine(%v) expected error = '%v', actual = '%v'", tt.args, tt.err, err)
@@ -287,7 +243,7 @@ func TestParseToLineValidEntry(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("'%v'=>'%s' (error='%v')", tt.args, tt.wantLine, tt.err), func(t *testing.T) {
 
-			gotLine, err := WriteToLine(hosts.NewEntry(tt.args.ip, tt.args.hostNames))
+			gotLine, err := WriteToLine(hosts.NewEntryUnsafe(net.ParseIP(tt.args.ip), tt.args.hostNames))
 
 			if tt.wantErr && (tt.err != err) {
 				t.Errorf("WriteToLine(%v) expected error = '%v', actual = '%v'", tt.args, tt.err, err)

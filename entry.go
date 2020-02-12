@@ -25,22 +25,27 @@ package hosts
 import (
 	"errors"
 	"fmt"
+	"net"
 	"sort"
+	"strings"
 )
 
 var ErrorNilEntry = errors.New("entry is nil")
+var ErrorInvalidIp = errors.New("invalid ip")
+var ErrorInvalidHostName = errors.New("invalid host-name")
 
 // An Entry represent a line in /etc/hosts with multiple hosts associate to one ip.
 type Entry interface {
-	Ip() string
+	Ip() net.IP
+	IpString() string
 	HostNames() []string
-	AddHostName(hostName string)
+	AddHostName(hostName string) error
 	String() string
 	Contains(hostName string) bool
 }
 
 type simpleEntry struct {
-	ip        string
+	ip        net.IP
 	hostNames map[string]bool
 }
 
@@ -54,25 +59,45 @@ func (s *simpleEntry) String() string {
 }
 
 // NewEntry returns an Entry which contains the given ip and the host names.
-func NewEntry(ip string, hostNames []string) Entry {
-	entry := NewEntryIp(ip)
-	for _, h := range hostNames {
-		entry.AddHostName(h)
+func NewEntry(ip net.IP, hostNames []string) (Entry, error) {
+	entry, err := NewEntryIp(ip)
+	if err != nil {
+		return nil, err
 	}
-	return entry
+	for _, h := range hostNames {
+		err = entry.AddHostName(h)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return entry, nil
 }
 
-// NewEntry returns an Entry which contains the given ip.
-func NewEntryIp(ip string) Entry {
-	return &simpleEntry{ip: ip, hostNames: make(map[string]bool)}
+// NewEntryIp returns an Entry which contains the given ip.
+func NewEntryIp(ip net.IP) (Entry, error) {
+	if ip == nil {
+		return nil, ErrorInvalidIp
+	}
+	return &simpleEntry{ip: ip, hostNames: make(map[string]bool)}, nil
 }
 
-func (s *simpleEntry) AddHostName(hostName string) {
-	s.hostNames[hostName] = true
+func (s *simpleEntry) AddHostName(hostName string) error {
+	if strings.Contains(hostName, " ") {
+		return ErrorInvalidHostName
+	}
+	if strings.Contains(hostName, "#") {
+		return ErrorInvalidHostName
+	}
+	s.hostNames[strings.ToLower(hostName)] = true
+	return nil
 }
 
-func (s *simpleEntry) Ip() string {
+func (s *simpleEntry) Ip() net.IP {
 	return s.ip
+}
+
+func (s *simpleEntry) IpString() string {
+	return s.ip.String()
 }
 
 func (s *simpleEntry) HostNames() []string {
@@ -91,5 +116,13 @@ func CloneEntry(entry Entry) (Entry, error) {
 	if entry == nil {
 		return nil, ErrorNilEntry
 	}
-	return NewEntry(entry.Ip(), entry.HostNames()), nil
+	return NewEntry(entry.Ip(), entry.HostNames())
+}
+
+func NewEntryUnsafe(ip net.IP, hosts []string) Entry {
+	h, err := NewEntry(ip, hosts)
+	if err != nil {
+		panic(err)
+	}
+	return h
 }

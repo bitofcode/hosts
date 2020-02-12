@@ -23,6 +23,7 @@
 package hosts
 
 import (
+	"net"
 	"testing"
 )
 
@@ -31,10 +32,10 @@ func TestEntrySet_AddEntry(t *testing.T) {
 		entry Entry
 	}{
 		{
-			entry: NewEntry("127.0.0.1", []string{"localhost"}),
+			entry: NewEntryUnsafe(net.ParseIP("127.0.0.1"), []string{"localhost"}),
 		},
 		{
-			entry: NewEntry("127.0.0.1", []string{"localhost", "example.com"}),
+			entry: NewEntryUnsafe(net.ParseIP("127.0.0.1"), []string{"localhost", "example.com"}),
 		},
 	}
 	for _, test := range tests {
@@ -50,22 +51,19 @@ func TestEntrySet_AddEntry(t *testing.T) {
 
 func TestEntrySet_AllEntries(t *testing.T) {
 	entries := NewEntrySet()
-	entries.AddEntry(NewEntry("127.0.0.1", []string{"hallo", "hello"}))
-	entries.AddEntry(NewEntry("127.0.0.1", []string{"example.de"}))
-	entries.AddEntry(NewEntry("192.0.0.1", []string{"example.com"}))
+	entries.AddEntry(NewEntryUnsafe(net.ParseIP("127.0.0.1"), []string{"hallo", "hello"}))
+	entries.AddEntry(NewEntryUnsafe(net.ParseIP("127.0.0.1"), []string{"example.de"}))
+	entries.AddEntry(NewEntryUnsafe(net.ParseIP("192.0.0.1"), []string{"example.com"}))
 
-	ents, err := entries.AllEntries()
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
+	allEntries := entries.AllEntries()
 
-	if len(ents) != 2 {
+	if len(allEntries) != 2 {
 		t.Errorf("expected a list of length 2")
 	}
 
 	entriesMap := make(map[string]Entry)
-	for _, entry := range ents {
-		entriesMap[entry.Ip()] = entry
+	for _, entry := range allEntries {
+		entriesMap[entry.Ip().String()] = entry
 	}
 
 	hostNames1 := []string{"hallo", "hello", "example.de"}
@@ -87,21 +85,18 @@ func TestEntrySet_AllEntries(t *testing.T) {
 
 func TestEntrySet_EntriesOfIP(t *testing.T) {
 	entries := NewEntrySet()
-	entries.AddEntry(NewEntry("127.0.0.1", []string{"hallo", "hello"}))
-	entries.AddEntry(NewEntry("127.0.0.1", []string{"example.de"}))
-	entries.AddEntry(NewEntry("192.0.0.1", []string{"example.com"}))
+	entries.AddEntry(NewEntryUnsafe(net.ParseIP("127.0.0.1"), []string{"hallo", "hello"}))
+	entries.AddEntry(NewEntryUnsafe(net.ParseIP("127.0.0.1"), []string{"example.de"}))
+	entries.AddEntry(NewEntryUnsafe(net.ParseIP("192.0.0.1"), []string{"example.com"}))
 
-	ents, err := entries.AllEntries()
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
+	allEntries := entries.AllEntries()
 
-	if len(ents) != 2 {
+	if len(allEntries) != 2 {
 		t.Errorf("expected a list of length 2")
 	}
 
-	expected := NewEntry("127.0.0.1", []string{"hallo", "hello", "example.de"})
-	hosts, found := entries.EntriesOfIP("127.0.0.1")
+	expected := NewEntryUnsafe(net.ParseIP("127.0.0.1"), []string{"hallo", "hello", "example.de"})
+	hosts, found := entries.EntriesOfIP(net.ParseIP("127.0.0.1"))
 	if !found {
 		t.Errorf("expected to have '%v'", expected.String())
 	}
@@ -110,6 +105,47 @@ func TestEntrySet_EntriesOfIP(t *testing.T) {
 		if !expected.Contains(h) {
 			t.Errorf("expected %v.EntriesOfIP(127.0.0.1) to contain '%s'", entries, h)
 		}
+	}
+
+}
+
+func TestAddEntry(t *testing.T) {
+	entries := NewEntrySet()
+	entries.AddEntry(
+		NewEntryUnsafe(net.ParseIP("127.0.0.1"), []string{"hallo", "hello"}),
+		NewEntryUnsafe(net.ParseIP("127.0.0.1"), []string{"example.de"}),
+		NewEntryUnsafe(net.ParseIP("192.0.0.1"), []string{"example.com"}))
+
+	allEntries := entries.AllEntries()
+
+	if len(allEntries) != 2 {
+		t.Errorf("expected a list of length 2")
+	}
+
+	expected := NewEntryUnsafe(net.ParseIP("127.0.0.1"), []string{"hallo", "hello", "example.de"})
+	hosts, found := entries.EntriesOfIP(net.ParseIP("127.0.0.1"))
+	if !found {
+		t.Errorf("expected to have '%v'", expected.String())
+	}
+
+	for _, h := range hosts {
+		if !expected.Contains(h) {
+			t.Errorf("expected %v.EntriesOfIP(127.0.0.1) to contain '%s'", entries, h)
+		}
+	}
+}
+
+func TestContains(t *testing.T) {
+	entries := NewEntrySet()
+
+	entries.AddEntry(
+		NewEntryUnsafe(net.ParseIP("127.0.0.1"), []string{"hallo", "hello"}),
+		NewEntryUnsafe(net.ParseIP("127.0.1.1"), []string{"example.de"}),
+		NewEntryUnsafe(net.ParseIP("192.0.0.1"), []string{"example.com"}))
+
+	entry := NewEntryUnsafe(net.ParseIP("127.0.0.1"), []string{"hallo"})
+	if !entries.Contains(entry) {
+		t.Errorf("expected %#v Contains (%#v), but it does not.", entries, entry)
 	}
 
 }

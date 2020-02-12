@@ -28,6 +28,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bitofcode/hosts"
+	"net"
 	"regexp"
 	"strings"
 )
@@ -36,8 +37,7 @@ var (
 	spaceRegexp         = regexp.MustCompile(`\s+`)
 	emptyLineError      = errors.New("empty line")
 	InvalidLineError    = errors.New("invalid line")
-	invalidIp           = errors.New("invalid ip")
-	invalidHostName     = errors.New("invalid host name")
+	invalidHostName     = hosts.ErrorInvalidHostName
 	invalidHostNameList = errors.New("invalid host name list")
 )
 
@@ -60,7 +60,11 @@ func ReadFromLine(line string) (ent hosts.Entry, err error) {
 		return nil, InvalidLineError
 	}
 
-	return hosts.NewEntry(lineItems[0], lineItems[1:]), nil
+	ip := net.ParseIP(lineItems[0])
+	if ip == nil {
+		return nil, hosts.ErrorInvalidIp
+	}
+	return hosts.NewEntry(ip, lineItems[1:])
 }
 
 func extractCommentFreeLine(trimmedLine string) string {
@@ -83,14 +87,6 @@ func isEmptyOrComment(line string) bool {
 
 // WriteToLine converts a given hostsfile.Entry to etc/hosts line without line-separator.
 func WriteToLine(ent hosts.Entry) (line string, err error) {
-	if strings.Contains(ent.Ip(), commentSign) {
-		return "", invalidIp
-	}
-	trimmerIp := TrimWhitespace(ent.Ip())
-	if len(trimmerIp) <= 0 {
-		return "", invalidIp
-	}
-
 	if ent.HostNames() == nil || len(ent.HostNames()) <= 0 {
 		return "", invalidHostNameList
 	}
@@ -101,5 +97,5 @@ func WriteToLine(ent hosts.Entry) (line string, err error) {
 		}
 	}
 
-	return fmt.Sprintf("%s  %s", ent.Ip(), strings.Join(ent.HostNames(), "  ")), nil
+	return fmt.Sprintf("%s  %s", ent.Ip().String(), strings.Join(ent.HostNames(), "  ")), nil
 }
