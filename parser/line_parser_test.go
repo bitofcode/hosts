@@ -305,3 +305,14 @@ func TestParseToLineValidEntry(t *testing.T) {
 		})
 	}
 }
+
+func TestLineRegexp(t *testing.T) {
+	line := "127.0.0.1 localhost host.local"
+	findings := regexpTrimWhitespace.FindStringSubmatch(line)
+	t.Logf("Len(findings)=%d\n", len(findings))
+	t.Logf("%#v\n", findings)
+	t.Logf("%#v\n", regexpTrimWhitespace.SubexpNames())
+	for i, r := range findings {
+		t.Logf("%d => '%s'\n", i, r)
+	}
+}
